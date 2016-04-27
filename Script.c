@@ -30,10 +30,20 @@ func OnPlayerRelaunch(int plr)
 	crew->DoEnergy(1000);
 
 	AddEffect("Drip", crew, 10, 1, crew);
+	AddEffect("ShowPath", crew, 10, 100, crew);
 }
 
 global func FxDripTimer()
 {
 	for (var i = 0; i < 10; i++)
 		InsertMaterial(Material("DuroLava"));
+}
+
+global func FxShowPathTimer()
+{
+	var step = 30;
+	var path = AStarMap({x=GetX()/step*step, y=GetY()/step*step}, {x=0, y=0}, step);
+	if (path)
+		for (var pt in path)
+			CreateParticle("Magic", AbsX(pt.x), AbsY(pt.y), 0, 0, 50);
 }
