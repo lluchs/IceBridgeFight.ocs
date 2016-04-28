@@ -5,35 +5,45 @@ global func AStarMap(proplist start, proplist goal, int step)
 {
 	if (start.x % step != goal.x % step || start.y % step != goal.y % step)
 		FatalError("AStarMap: Goal not reachable with this step size.");
-	var ops = {
-		distance = this._AStarMapDistance,
-		cost = this._AStarMapDistance,
-		successors = this._AStarMapSuccessors,
-		step = step,
-	};
+	var ops = new _AStarMapOps { step = step };
 	return AStar(start, goal, ops);
 }
 
-global func _AStarMapDistance(proplist a, proplist b)
+global func AsyncAStarMap(proplist start, proplist goal, int step, proplist options)
 {
-	// Manhattan distance
-	return Abs(a.x - b.x) + Abs(a.y - b.y);
+	if (start.x % step != goal.x % step || start.y % step != goal.y % step)
+		FatalError("AStarMap: Goal not reachable with this step size.");
+	var ops = new _AStarMapOps { step = step };
+	return AsyncAStar(start, goal, ops, options);
 }
 
-global func _AStarMapPathFree(proplist a, proplist b)
-{
-	return PathFree(a.x, a.y, b.x, b.y);
-}
+static const _AStarMapOps = {
+	distance = func(proplist a, proplist b)
+	{
+		// Manhattan distance
+		return Global->Abs(a.x - b.x) + Global->Abs(a.y - b.y);
+	},
 
-global func _AStarMapSuccessors(proplist a)
-{
-	var successors = [], pt;
-	if (_AStarMapPathFree(a, (pt = {x = a.x + this.step, y = a.y}))) PushBack(successors, pt);
-	if (_AStarMapPathFree(a, (pt = {x = a.x, y = a.y + this.step}))) PushBack(successors, pt);
-	if (_AStarMapPathFree(a, (pt = {x = a.x - this.step, y = a.y}))) PushBack(successors, pt);
-	if (_AStarMapPathFree(a, (pt = {x = a.x, y = a.y - this.step}))) PushBack(successors, pt);
-	return successors;
-}
+	cost = func() { return this->distance(...); },
+
+	successors = func(proplist a)
+	{
+		var successors = [], pt;
+		if (pathfree(a, (pt = {x = a.x + this.step, y = a.y}))) Global->PushBack(successors, pt);
+		if (pathfree(a, (pt = {x = a.x, y = a.y + this.step}))) Global->PushBack(successors, pt);
+		if (pathfree(a, (pt = {x = a.x - this.step, y = a.y}))) Global->PushBack(successors, pt);
+		if (pathfree(a, (pt = {x = a.x, y = a.y - this.step}))) Global->PushBack(successors, pt);
+		return successors;
+	},
+
+	pathfree: func(proplist a, proplist b)
+	{
+		return Global->PathFree(a.x, a.y, b.x, b.y);
+	},
+
+	step = 10
+
+};
 
 // Generic A* implementation.
 global func AStar(start, goal, proplist ops)
@@ -46,7 +56,7 @@ global func AStar(start, goal, proplist ops)
 	var current;
 	while (GetLength(state.open))
 	{
-		current = HeapExtract(state.open);
+		current = Global->HeapExtract(state.open);
 		if (DeepEqual(current[2], goal))
 		{
 			// Reconstruct the path.
@@ -60,6 +70,50 @@ global func AStar(start, goal, proplist ops)
 	}
 	return nil;
 }
+
+global func AsyncAStar(start, goal, proplist ops, proplist options)
+{
+	var fx = CreateEffect(IntAStar, 1, options.interval ?? 1);
+	fx.state = {
+		open = [[ops->distance(start, goal), 0, start]],
+		closed = [],
+		goal = goal,
+	};
+	fx.ops = ops;
+	fx.steps = options.steps ?? 10;
+	fx.callback = options.callback;
+	return fx;
+}
+
+static const IntAStar = {
+	Timer = func()
+	{
+		var state = this.state, ops = this.ops, steps = this.steps;
+		while (steps--)
+		{
+			var current = Global->HeapExtract(state.open);
+			if (Global->DeepEqual(current[2], state.goal))
+			{
+				// Reconstruct the path.
+				var path = [state.goal];
+				while (current = current[3])
+					Global->PushFront(path, current[2]);
+				Global->Log("done after %d frames", this.Time);
+				this.callback->Done(path);
+				return -1;
+			}
+			Global->PushBack(state.closed, current[2]);
+			Global->_AStarExpand(state, ops, current);
+
+			if (!Global->GetLength(state.open))
+			{
+				Global->Log("done after %d frames", this.Time);
+				this.callback->Done(nil);
+				return -1;
+			}
+		}
+	}
+};
 
 global func _AStarExpand(proplist state, proplist ops, array current)
 {
