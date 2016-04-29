@@ -17,11 +17,11 @@ global func AsyncAStarMap(proplist start, proplist goal, int step, proplist opti
 	return AsyncAStar(start, goal, ops, options);
 }
 
-static const _AStarMapOps = {
+static const _AStarMapOps = new Global {
 	distance = func(proplist a, proplist b)
 	{
 		// Manhattan distance
-		return Global->Abs(a.x - b.x) + Global->Abs(a.y - b.y);
+		return Abs(a.x - b.x) + Abs(a.y - b.y);
 	},
 
 	cost = func() { return this->distance(...); },
@@ -29,16 +29,16 @@ static const _AStarMapOps = {
 	successors = func(proplist a)
 	{
 		var successors = [], pt;
-		if (pathfree(a, (pt = {x = a.x + this.step, y = a.y}))) Global->PushBack(successors, pt);
-		if (pathfree(a, (pt = {x = a.x, y = a.y + this.step}))) Global->PushBack(successors, pt);
-		if (pathfree(a, (pt = {x = a.x - this.step, y = a.y}))) Global->PushBack(successors, pt);
-		if (pathfree(a, (pt = {x = a.x, y = a.y - this.step}))) Global->PushBack(successors, pt);
+		if (pathfree(a, (pt = {x = a.x + this.step, y = a.y}))) PushBack(successors, pt);
+		if (pathfree(a, (pt = {x = a.x, y = a.y + this.step}))) PushBack(successors, pt);
+		if (pathfree(a, (pt = {x = a.x - this.step, y = a.y}))) PushBack(successors, pt);
+		if (pathfree(a, (pt = {x = a.x, y = a.y - this.step}))) PushBack(successors, pt);
 		return successors;
 	},
 
-	pathfree: func(proplist a, proplist b)
+	pathfree = func(proplist a, proplist b)
 	{
-		return Global->PathFree(a.x, a.y, b.x, b.y);
+		return PathFree(a.x, a.y, b.x, b.y);
 	},
 
 	step = 10
@@ -56,7 +56,7 @@ global func AStar(start, goal, proplist ops)
 	var current;
 	while (GetLength(state.open))
 	{
-		current = Global->HeapExtract(state.open);
+		current = HeapExtract(state.open);
 		if (DeepEqual(current[2], goal))
 		{
 			// Reconstruct the path.
@@ -85,31 +85,31 @@ global func AsyncAStar(start, goal, proplist ops, proplist options)
 	return fx;
 }
 
-static const IntAStar = {
+static const IntAStar = new Global {
 	Timer = func()
 	{
 		var state = this.state, ops = this.ops, steps = this.steps;
 		while (steps--)
 		{
-			var current = Global->HeapExtract(state.open);
-			if (Global->DeepEqual(current[2], state.goal))
+			var current = HeapExtract(state.open);
+			if (DeepEqual(current[2], state.goal))
 			{
 				// Reconstruct the path.
 				var path = [state.goal];
 				while (current = current[3])
-					Global->PushFront(path, current[2]);
-				Global->Log("done after %d frames", this.Time);
+					PushFront(path, current[2]);
+				Log("done after %d frames", this.Time);
 				this.callback->Done(path);
-				return -1;
+				return FX_Execute_Kill;
 			}
-			Global->PushBack(state.closed, current[2]);
-			Global->_AStarExpand(state, ops, current);
+			PushBack(state.closed, current[2]);
+			_AStarExpand(state, ops, current);
 
-			if (!Global->GetLength(state.open))
+			if (!GetLength(state.open))
 			{
-				Global->Log("done after %d frames", this.Time);
+				Log("done after %d frames", this.Time);
 				this.callback->Done(nil);
-				return -1;
+				return FX_Execute_Kill;
 			}
 		}
 	}
