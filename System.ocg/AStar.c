@@ -82,6 +82,7 @@ global func AsyncAStar(start, goal, proplist ops, proplist options)
 	fx.ops = ops;
 	fx.steps = options.steps ?? 10;
 	fx.callback = options.callback;
+	fx.max_time = options.max_time;
 	return fx;
 }
 
@@ -98,17 +99,17 @@ static const IntAStar = new Global {
 				var path = [state.goal];
 				while (current = current[3])
 					PushFront(path, current[2]);
-				Log("done after %d frames", this.Time);
+				//Log("done after %d frames", this.Time);
 				this.callback->Done(path);
 				return FX_Execute_Kill;
 			}
 			PushBack(state.closed, current[2]);
 			_AStarExpand(state, ops, current);
 
-			if (!GetLength(state.open))
+			if (!GetLength(state.open) || this.max_time && this.Time > this.max_time)
 			{
-				Log("done after %d frames", this.Time);
-				this.callback->Done(nil);
+				//Log("done after %d frames", this.Time);
+				this.callback->Done(nil, state.closed);
 				return FX_Execute_Kill;
 			}
 		}
