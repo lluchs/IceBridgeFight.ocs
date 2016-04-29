@@ -1,9 +1,10 @@
 /* Hot ice */
 
-static DEBUG = false;
+static DEBUG;
 
 func Initialize()
 {
+	DEBUG = false;
 	Meteor->SetChance(10);
 	CreateEffect(CheckLandscapeFill, 10, 200);
 }
@@ -113,9 +114,9 @@ static const CheckLandscapeFill = new Global {
 
 	Timer = func(target)
 	{
-		var step = 100;
+		var step = 80;
 		var x = Random(LandscapeWidth()), y = 0;
-		var tx = x, ty = LandscapeHeight() / step * step - 3*step + y % step;
+		var tx = x, ty = LandscapeHeight()*9/10 / step * step + y % step;
 		target->AsyncAStarMap({x=x, y=y}, {x=tx, y=ty}, step, {
 			callback = this,
 			max_time = 50,
