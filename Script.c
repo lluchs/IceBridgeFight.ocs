@@ -27,10 +27,11 @@ func OnPlayerRelaunch(int plr)
 	var crew = GetCrew(plr);
 	crew->SetPosition(border + Random(ls_wdt - border), border + Random(ls_hgt * 4/5 - border));
 
-	crew.MaxContentsCount = 2;
+	crew.MaxContentsCount = 3;
 	var wallkit = crew->CreateContents(IceWallKit);
 	wallkit->ControlUseStop(crew, crew->GetX(), crew->GetY() + 200);
 	crew->CreateContents(WindBag);
+	crew->CreateContents(Club);
 
 	crew.MaxEnergy = 100000;
 	crew->DoEnergy(1000);
