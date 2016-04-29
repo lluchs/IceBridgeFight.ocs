@@ -24,7 +24,7 @@ func OnPlayerRelaunch(int plr)
 	// Player positioning. 
 	var ls_wdt = LandscapeWidth(), ls_hgt = LandscapeHeight(), border = 20;
 	var crew = GetCrew(plr);
-	crew->SetPosition(border + Random(ls_wdt - border), border + Random(ls_hgt - border));
+	crew->SetPosition(border + Random(ls_wdt - border), border + Random(ls_hgt * 4/5 - border));
 
 	crew.MaxContentsCount = 2;
 	var wallkit = crew->CreateContents(IceWallKit);
