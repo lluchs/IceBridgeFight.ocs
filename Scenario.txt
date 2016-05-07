@@ -14,7 +14,7 @@ Rules=Rule_KillLogs=1;Rule_Gravestones=1;
 MapWidth=64
 MapHeight=40
 TopOpen=1
-BottomOpen=0
+BottomOpen=1
 LeftOpen=0
 RightOpen=0
 AutoScanSideOpen=0
