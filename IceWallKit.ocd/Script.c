@@ -66,6 +66,6 @@ private func StopPreview(object clonk, ...)
 local Collectible = 1;
 local Name = "$Name$";
 local Description = "$Description$";
-local BridgeLength = 15;
+local BridgeLength = 30;
 local BridgeThickness = 5;
 local BridgeMaterial = "Ice-ice";
