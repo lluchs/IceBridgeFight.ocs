@@ -8,6 +8,28 @@ func Initialize()
 	SetInfiniteStackCount();
 }
 
+public func ControlUseStop(object clonk, int x, int y, ...)
+{
+	StopPreview(clonk);
+	if (!IsIceBridgeAllowed(clonk, x, y))
+	{
+		clonk->PlaySoundDoubt();
+		return true;
+	}
+	else
+	{
+		return inherited(clonk, x, y, ...);
+	}
+}
+
+
+private func IsIceBridgeAllowed(object clonk, int x, int y)
+{
+	var c = Offset2BridgeCoords(clonk, x, y);
+	// Don't allow ice bridges at the top of the landscape.
+	return clonk->GetY() + Min(c.y1, c.y2) > 30;
+}
+
 private func SetPreview(object clonk, int x, int y, ...)
 {
 	if (!preview) AddTimer(this.UpdateIcePreviewColor, 3);
@@ -23,7 +45,11 @@ private func UpdateIcePreviewColor()
 {
 	if (preview)
 	{
-		preview->SetColor(0xff80ffff);
+		var ok = IsIceBridgeAllowed(this.ice_last_clonk, this.ice_last_x, this.ice_last_y);
+		if (ok)
+			preview->SetColor(0xff80ffff);
+		else
+			preview->SetColor(0xffff0000);
 	}
 	return true;
 }
